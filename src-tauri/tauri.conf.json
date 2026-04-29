@@ -29,7 +29,7 @@
   },
   "bundle": {
     "active": true,
-    "createUpdaterArtifacts": true,
+    "createUpdaterArtifacts": false,
     "longDescription": "OpenList Desktop is a cross-platform desktop application for managing your OpenList",
     "category": "DeveloperTool",
     "shortDescription": "OpenList Desktop",
