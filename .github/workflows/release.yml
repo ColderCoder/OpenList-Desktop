@@ -154,7 +154,7 @@ jobs:
           p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
 
       - name: Decode and Setup PFX Certificate (Windows)
-        if: matrix.platform == 'windows'
+        if: matrix.platform == 'windows' && env.WINDOWS_PFX != ''
         shell: pwsh
         run: |
            $certDir = "certificate"
