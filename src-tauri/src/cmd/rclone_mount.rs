@@ -34,6 +34,35 @@ pub fn get_mount_process_id(remote_name: &str) -> String {
     format!("rclone_mount_{remote_name}_process")
 }
 
+#[cfg(target_os = "windows")]
+fn prepare_mount_point(mount_path: &Path, mount_point: &str) -> Result<(), String> {
+    if mount_path.exists() && is_empty_dir(mount_path) {
+        fs::remove_dir(mount_path).map_err(|e| {
+            format!("Failed to prepare mount point '{}': {}", mount_point, e)
+        })?;
+    }
+    Ok(())
+}
+
+#[cfg(not(target_os = "windows"))]
+fn prepare_mount_point(mount_path: &Path, mount_point: &str) -> Result<(), String> {
+    if !mount_path.exists() {
+        fs::create_dir_all(mount_path).map_err(|e| {
+            format!(
+                "Failed to create mount point directory '{}': {}",
+                mount_point, e
+            )
+        })?;
+    }
+    Ok(())
+}
+
+fn is_empty_dir(path: &Path) -> bool {
+    fs::read_dir(path)
+        .map(|mut entries| entries.next().is_none())
+        .unwrap_or(false)
+}
+
 #[tauri::command]
 pub async fn rclone_list_config(
     remote_type: String,
@@ -169,14 +198,7 @@ pub async fn mount_remote(
 
     if let Some(mount_point) = mount_point_opt {
         let mount_path = Path::new(mount_point);
-        if !mount_path.exists()
-            && let Err(e) = fs::create_dir_all(mount_path)
-        {
-            return Err(format!(
-                "Failed to create mount point directory '{}': {}",
-                mount_point, e
-            ));
-        }
+        prepare_mount_point(mount_path, mount_point)?;
     }
 
     let mut args: Vec<String> = vec![
